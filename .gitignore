@@ -1,0 +1,16 @@
+# 后端
+video-backend/target/
+video-backend/*.log
+video-backend/application-*.yml
+video-backend/.idea/
+video-backend/*.iml
+
+# 前端
+video-frontend/node_modules/
+video-frontend/dist/
+video-frontend/.vscode/
+video-frontend/.idea/
+
+# 系统
+.DS_Store
+*.swp
