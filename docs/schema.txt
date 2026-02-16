@@ -1,0 +1,292 @@
+-- ==================== MySQL 数据库 ====================
+-- 执行以下SQL语句创建业务数据库和表
+
+CREATE DATABASE IF NOT EXISTS video_analysis DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE video_analysis;
+
+-- 用户表
+CREATE TABLE IF NOT EXISTS `users` (
+  `user_id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+  `username` VARCHAR(50) UNIQUE NOT NULL COMMENT '用户名',
+  `password_hash` VARCHAR(255) NOT NULL COMMENT '密码哈希',
+  `email` VARCHAR(100) UNIQUE COMMENT '邮箱',
+  `phone` VARCHAR(20) COMMENT '手机号',
+  `nickname` VARCHAR(50) COMMENT '昵称',
+  `avatar_url` VARCHAR(500) COMMENT '头像URL',
+  `gender` TINYINT DEFAULT 0 COMMENT '性别:0-未知,1-男,2-女',
+  `birthday` DATE COMMENT '生日',
+  `city` VARCHAR(50) COMMENT '城市',
+  `signature` VARCHAR(200) COMMENT '个性签名',
+  `status` TINYINT DEFAULT 1 COMMENT '状态:0-禁用,1-正常,2-锁定',
+  `user_level` TINYINT DEFAULT 1 COMMENT '用户等级',
+  `total_watch_time` INT DEFAULT 0 COMMENT '总观看时长(秒)',
+  `last_login_time` DATETIME COMMENT '最后登录时间',
+  `register_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_username(`username`),
+  INDEX idx_email(`email`),
+  INDEX idx_register_time(`register_time`)
+) ENGINE=InnoDB COMMENT='用户表';
+
+-- 视频表
+CREATE TABLE IF NOT EXISTS `videos` (
+  `video_id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '视频ID',
+  `video_title` VARCHAR(200) NOT NULL COMMENT '视频标题',
+  `video_desc` TEXT COMMENT '视频描述',
+  `video_url` VARCHAR(500) NOT NULL COMMENT '视频URL',
+  `cover_url` VARCHAR(500) COMMENT '封面URL',
+  `user_id` BIGINT NOT NULL COMMENT '发布者ID',
+  `category_id` INT COMMENT '分类ID',
+  `duration` INT NOT NULL COMMENT '视频时长(秒)',
+  `width` INT COMMENT '视频宽度',
+  `height` INT COMMENT '视频高度',
+  `format` VARCHAR(20) COMMENT '视频格式',
+  `file_size` BIGINT COMMENT '文件大小(字节)',
+  `view_count` BIGINT DEFAULT 0 COMMENT '观看次数',
+  `like_count` BIGINT DEFAULT 0 COMMENT '点赞数',
+  `share_count` BIGINT DEFAULT 0 COMMENT '分享数',
+  `comment_count` BIGINT DEFAULT 0 COMMENT '评论数',
+  `collect_count` BIGINT DEFAULT 0 COMMENT '收藏数',
+  `status` TINYINT DEFAULT 1 COMMENT '状态:0-删除,1-正常,2-审核中,3-下架',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_user_id(`user_id`),
+  INDEX idx_category_id(`category_id`),
+  INDEX idx_create_time(`create_time`),
+  INDEX idx_status(`status`)
+) ENGINE=InnoDB COMMENT='视频表';
+
+-- 视频分类表
+CREATE TABLE IF NOT EXISTS `video_categories` (
+  `category_id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '分类ID',
+  `category_name` VARCHAR(50) NOT NULL COMMENT '分类名称',
+  `parent_id` INT DEFAULT 0 COMMENT '父分类ID',
+  `category_level` TINYINT DEFAULT 1 COMMENT '分类层级',
+  `category_order` INT DEFAULT 0 COMMENT '排序',
+  `status` TINYINT DEFAULT 1 COMMENT '状态:0-禁用,1-正常',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+) ENGINE=InnoDB COMMENT='视频分类表';
+
+-- 用户行为表（详细记录）
+CREATE TABLE IF NOT EXISTS `user_actions` (
+  `action_id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '行为ID',
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `video_id` BIGINT NOT NULL COMMENT '视频ID',
+  `action_type` TINYINT NOT NULL COMMENT '行为类型:1-观看,2-点赞,3-取消点赞,4-分享,5-评论,6-收藏,7-取消收藏',
+  `action_value` DECIMAL(10,4) DEFAULT 1.0 COMMENT '行为权重值',
+  `duration` INT DEFAULT 0 COMMENT '观看时长(秒)',
+  `progress` FLOAT DEFAULT 0 COMMENT '观看进度(0-1)',
+  `comment_content` TEXT COMMENT '评论内容',
+  `share_platform` VARCHAR(50) COMMENT '分享平台',
+  `device_type` VARCHAR(50) COMMENT '设备类型',
+  `ip_address` VARCHAR(50) COMMENT 'IP地址',
+  `user_agent` TEXT COMMENT '用户代理',
+  `action_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '行为时间',
+  INDEX idx_user_id(`user_id`),
+  INDEX idx_video_id(`video_id`),
+  INDEX idx_action_type(`action_type`),
+  INDEX idx_action_time(`action_time`),
+  INDEX idx_user_video(`user_id`, `video_id`)
+) ENGINE=InnoDB COMMENT='用户行为表';
+
+-- 用户标签表（用户画像基础）
+CREATE TABLE IF NOT EXISTS `user_tags` (
+  `tag_id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '标签ID',
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `tag_type` VARCHAR(50) NOT NULL COMMENT '标签类型:preference-偏好,behavior-行为,demographic-人口',
+  `tag_name` VARCHAR(100) NOT NULL COMMENT '标签名称',
+  `tag_value` VARCHAR(255) COMMENT '标签值',
+  `weight` DECIMAL(5,4) DEFAULT 1.0 COMMENT '标签权重(0-1)',
+  `source` VARCHAR(50) COMMENT '标签来源:manual-手动,rule-规则,machine-机器学习',
+  `valid_until` DATETIME COMMENT '有效期至',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_user_id(`user_id`),
+  INDEX idx_tag_type(`tag_type`),
+  INDEX idx_tag_name(`tag_name`)
+) ENGINE=InnoDB COMMENT='用户标签表';
+
+-- 推荐结果表
+CREATE TABLE IF NOT EXISTS `recommendations` (
+  `recommend_id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '推荐ID',
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `video_id` BIGINT NOT NULL COMMENT '视频ID',
+  `recommend_type` VARCHAR(50) COMMENT '推荐类型:cf-协同过滤,content-内容,hot-热门,new-最新',
+  `recommend_score` DECIMAL(8,7) COMMENT '推荐分数(0-1)',
+  `rank_position` INT COMMENT '推荐位置',
+  `recommend_reason` VARCHAR(500) COMMENT '推荐理由',
+  `expose_time` DATETIME COMMENT '曝光时间',
+  `click_time` DATETIME COMMENT '点击时间',
+  `is_click` TINYINT DEFAULT 0 COMMENT '是否点击:0-否,1-是',
+  `ctr` DECIMAL(5,4) COMMENT '点击率',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  INDEX idx_user_id(`user_id`),
+  INDEX idx_video_id(`video_id`),
+  INDEX idx_recommend_type(`recommend_type`),
+  INDEX idx_create_time(`create_time`)
+) ENGINE=InnoDB COMMENT='推荐结果表';
+
+-- 系统配置表
+CREATE TABLE IF NOT EXISTS `system_configs` (
+  `config_id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '配置ID',
+  `config_key` VARCHAR(100) UNIQUE NOT NULL COMMENT '配置键',
+  `config_value` TEXT NOT NULL COMMENT '配置值',
+  `config_desc` VARCHAR(500) COMMENT '配置描述',
+  `config_group` VARCHAR(50) DEFAULT 'default' COMMENT '配置分组',
+  `is_public` TINYINT DEFAULT 0 COMMENT '是否公开:0-否,1-是',
+  `status` TINYINT DEFAULT 1 COMMENT '状态:0-禁用,1-正常',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_config_key(`config_key`),
+  INDEX idx_config_group(`config_group`)
+) ENGINE=InnoDB COMMENT='系统配置表';
+
+-- 初始化分类数据
+INSERT IGNORE INTO `video_categories` (`category_name`, `parent_id`, `category_level`, `category_order`) VALUES
+('娱乐', 0, 1, 1),
+('音乐', 0, 1, 2),
+('生活', 0, 1, 3),
+('知识', 0, 1, 4),
+('游戏', 0, 1, 5),
+('影视', 0, 1, 6);
+
+-- 初始化系统配置
+INSERT IGNORE INTO `system_configs` (`config_key`, `config_value`, `config_desc`, `config_group`) VALUES
+('video.upload.max_size', '524288000', '视频上传最大大小(字节)', 'video'),
+('video.upload.allowed_formats', 'mp4,avi,mov,wmv,flv', '允许的视频格式', 'video'),
+('user.default_avatar', '/static/avatar/default.png', '用户默认头像', 'user'),
+('recommend.cf.enabled', 'true', '协同过滤推荐是否启用', 'recommend'),
+('recommend.hot.top_n', '100', '热门推荐数量', 'recommend');
+
+# ==================== HDFS 目录结构 ====================
+# 启动Hadoop（若未启动）
+start-all.sh
+
+# 创建项目根目录
+hadoop fs -mkdir -p /video-analysis
+
+# 原始数据目录
+hadoop fs -mkdir -p /video-analysis/raw/user-actions
+hadoop fs -mkdir -p /video-analysis/raw/video-meta
+hadoop fs -mkdir -p /video-analysis/raw/user-profiles
+
+# 处理数据目录
+hadoop fs -mkdir -p /video-analysis/processed/daily
+hadoop fs -mkdir -p /video-analysis/processed/hourly
+hadoop fs -mkdir -p /video-analysis/processed/realtime
+
+# 分析结果目录
+hadoop fs -mkdir -p /video-analysis/results/user-portrait
+hadoop fs -mkdir -p /video-analysis/results/video-popularity
+hadoop fs -mkdir -p /video-analysis/results/recommendations
+
+# 临时目录和检查点
+hadoop fs -mkdir -p /video-analysis/temp
+hadoop fs -mkdir -p /video-analysis/checkpoint
+
+# 日志目录
+hadoop fs -mkdir -p /video-analysis/logs/spark
+hadoop fs -mkdir -p /video-analysis/logs/flume
+
+# 设置权限（可选）
+hadoop fs -chmod -R 755 /video-analysis
+hadoop fs -chown -R hadoop:hadoop /video-analysis
+
+# ==================== HBase 表结构 ====================
+# 进入HBase Shell并执行以下命令
+
+hbase shell <<EOF
+# 用户画像表
+create 'user_portrait',
+  {NAME => 'basic', VERSIONS => 1, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NAME => 'behavior', VERSIONS => 10, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NAME => 'preference', VERSIONS => 5, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NAME => 'statistics', VERSIONS => 1, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NUMREGIONS => 6, SPLITALGO => 'HexStringSplit'}
+
+# 视频特征表
+create 'video_features',
+  {NAME => 'meta', VERSIONS => 1, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NAME => 'content', VERSIONS => 1, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NAME => 'statistics', VERSIONS => 10, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NAME => 'vectors', VERSIONS => 1, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NUMREGIONS => 6, SPLITALGO => 'HexStringSplit'}
+
+# 实时推荐结果表
+create 'realtime_recommendations',
+  {NAME => 'results', VERSIONS => 1, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY', TTL => 86400},
+  {NAME => 'history', VERSIONS => 100, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NUMREGIONS => 6, SPLITALGO => 'HexStringSplit'}
+
+# 用户-视频交互矩阵表
+create 'user_video_interactions',
+  {NAME => 'actions', VERSIONS => 10, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NAME => 'weights', VERSIONS => 5, BLOOMFILTER => 'ROW', COMPRESSION => 'SNAPPY'},
+  {NUMREGIONS => 10, SPLITALGO => 'HexStringSplit'}
+
+# 查看已创建的表
+list
+EOF
+
+# ==================== Kafka 主题 ====================
+# 启动ZooKeeper和Kafka（若未启动）
+zkServer.sh start
+kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+
+# 创建主题
+kafka-topics.sh --create \
+  --bootstrap-server localhost:9092 \
+  --replication-factor 1 \
+  --partitions 3 \
+  --topic user-behavior-topic
+
+kafka-topics.sh --create \
+  --bootstrap-server localhost:9092 \
+  --replication-factor 1 \
+  --partitions 2 \
+  --topic video-event-topic
+
+kafka-topics.sh --create \
+  --bootstrap-server localhost:9092 \
+  --replication-factor 1 \
+  --partitions 2 \
+  --topic recommendation-result-topic
+
+kafka-topics.sh --create \
+  --bootstrap-server localhost:9092 \
+  --replication-factor 1 \
+  --partitions 1 \
+  --topic system-metric-topic
+
+# 查看所有主题
+kafka-topics.sh --list --bootstrap-server localhost:9092
+
+# ==================== Redis 数据结构 ====================
+# 启动Redis服务（若未启动）
+redis-server --daemonize yes
+
+# 连接Redis并初始化数据
+redis-cli <<EOF
+SELECT 0
+
+# 热门视频排行榜（ZSet）
+ZADD hot:videos:daily 1000 "video:123"
+ZADD hot:videos:daily 800 "video:456"
+ZADD hot:videos:daily 600 "video:789"
+
+# 用户个性化推荐列表（List）
+LPUSH recommend:user:1001 "video:123" "video:456" "video:789"
+
+# 视频统计信息缓存（Hash）
+HSET video:stats:123 view_count 1500 like_count 120 share_count 45
+
+# 用户行为频率限制（String + Expire）
+SETEX action:limit:user:1001:like 60 10
+
+# 已推荐视频去重集合（Set替代布隆过滤器）
+SADD recommended:user:1001 "video:123"
+EXPIRE recommended:user:1001 86400
+SADD recommended:user:1001 "video:456"
+EXPIRE recommended:user:1001 86400
+
+
