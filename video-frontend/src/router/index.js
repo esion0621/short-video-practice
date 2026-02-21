@@ -18,11 +18,11 @@ const router = createRouter({
   ]
 })
 
-// 路由守卫：检查登录状态
+// 路由守卫
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   if (to.meta.requiresAuth && !token) {
-    next('/login')
+    next({ path: '/login', query: { redirect: to.fullPath } })
   } else {
     next()
   }

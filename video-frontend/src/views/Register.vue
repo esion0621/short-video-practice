@@ -47,18 +47,30 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useRouter } from 'vue-router'
 
 const userStore = useUserStore()
+const route = useRoute()
 const router = useRouter()
+
 const username = ref('')
 const email = ref('')
 const nickname = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
+
+// 获取重定向地址，默认为首页
+const redirect = ref('/')
+
+onMounted(() => {
+  if (route.query.redirect) {
+    redirect.value = route.query.redirect
+    console.log('注册重定向到:', redirect.value) 
+  }
+})
 
 const handleSubmit = async () => {
   if (password.value !== confirmPassword.value) {
@@ -73,7 +85,8 @@ const handleSubmit = async () => {
       nickname: nickname.value,
       password: password.value
     })
-    router.push('/')
+    // 注册成功后跳转到原目标页面
+    router.push(redirect.value)
   } catch (e) {
     alert('注册失败，请稍后重试')
   } finally {

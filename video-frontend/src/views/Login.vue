@@ -33,21 +33,30 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useRouter } from 'vue-router'
 
 const userStore = useUserStore()
+const route = useRoute()
 const router = useRouter()
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
+const redirect = ref('/')
+
+onMounted(() => {
+  if (route.query.redirect) {
+    redirect.value = route.query.redirect
+    console.log('Redirect to:', redirect.value) 
+  }
+})
 
 const handleSubmit = async () => {
   loading.value = true
   try {
     await userStore.login({ username: username.value, password: password.value })
-    router.push('/')
+    router.push(redirect.value)
   } catch (e) {
     alert('登录失败，请检查用户名和密码')
   } finally {

@@ -1,27 +1,26 @@
 import { defineStore } from 'pinia'
 import { userApi } from '@/api/user'
-import axios from 'axios'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: localStorage.getItem('token') || '',
     userInfo: null
   }),
+  getters: {
+    isLoggedIn: (state) => !!state.token
+  },
   actions: {
     async login(credentials) {
-      const token = await userApi.login(credentials)
-      this.token = token
-      localStorage.setItem('token', token)
-      // 获取用户信息（需要解析 token 获取 userId，或后端返回用户信息）
-      // 假设登录接口返回 token 后，我们使用另一个接口获取用户信息
-      // 这里简单起见，我们调用 /api/users/profile 接口（需后端实现）
-      // 如果没有，可以暂时用假数据，或者登录接口直接返回用户信息
-      // 我们暂时先不实现，Profile 页面会单独请求用户信息
+      const response = await userApi.login(credentials)
+      this.token = response.token
+      this.userInfo = response.user
+      localStorage.setItem('token', response.token)
     },
     async register(userData) {
-      const token = await userApi.register(userData)
-      this.token = token
-      localStorage.setItem('token', token)
+      const response = await userApi.register(userData) 
+      this.token = response.token
+      this.userInfo = response.user
+      localStorage.setItem('token', response.token)
     },
     logout() {
       this.token = ''
