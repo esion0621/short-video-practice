@@ -1,16 +1,29 @@
-# 后端
+# 后端编译产物
 video-backend/target/
 video-backend/*.log
-video-backend/application-*.yml
 video-backend/.idea/
 video-backend/*.iml
+video-backend/.classpath
+video-backend/.project
+video-backend/.settings/
 
-# 前端
+# 前端依赖和构建产物
 video-frontend/node_modules/
 video-frontend/dist/
 video-frontend/.vscode/
 video-frontend/.idea/
+video-frontend/*.log
 
-# 系统
+# Spark 编译产物
+scripts/target/
+scripts/project/project/
+scripts/project/target/
+
+# 系统文件
 .DS_Store
 *.swp
+*.swo
+*~
+
+# 敏感配置（忽略实际配置文件，保留示例模板）
+video-backend/src/main/resources/application.yml
