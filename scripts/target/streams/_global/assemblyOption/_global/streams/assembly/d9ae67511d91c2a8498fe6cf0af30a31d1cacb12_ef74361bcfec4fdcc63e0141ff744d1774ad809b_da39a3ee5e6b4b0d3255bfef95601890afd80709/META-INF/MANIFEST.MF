@@ -1,0 +1,35 @@
+Manifest-Version: 1.0
+Bundle-Description: Jedis is a blazingly small and sane Redis java cli
+ ent.
+Automatic-Module-Name: redis.clients.jedis
+Bundle-License: http://github.com/redis/jedis/raw/master/LICENSE.txt
+Bundle-SymbolicName: redis.clients.jedis
+Built-By: runner
+Bnd-LastModified: 1630389187492
+Bundle-ManifestVersion: 2
+Import-Package: javax.net,javax.net.ssl,org.apache.commons.pool2;versi
+ on="[2.10,3)",org.apache.commons.pool2.impl;version="[2.10,3)",org.sl
+ f4j;version="[1.7,2)",redis.clients.jedis,redis.clients.jedis.args,re
+ dis.clients.jedis.commands,redis.clients.jedis.exceptions,redis.clien
+ ts.jedis.params,redis.clients.jedis.resps,redis.clients.jedis.util
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+Tool: Bnd-4.2.0.201903051501
+Export-Package: redis.clients.jedis;uses:="javax.net.ssl,org.apache.co
+ mmons.pool2,org.apache.commons.pool2.impl,org.slf4j,redis.clients.jed
+ is.args,redis.clients.jedis.commands,redis.clients.jedis.exceptions,r
+ edis.clients.jedis.params,redis.clients.jedis.resps,redis.clients.jed
+ is.util";version="3.7.0",redis.clients.jedis.exceptions;uses:="redis.
+ clients.jedis";version="3.7.0",redis.clients.jedis.util;uses:="org.ap
+ ache.commons.pool2,org.apache.commons.pool2.impl,redis.clients.jedis,
+ redis.clients.jedis.exceptions";version="3.7.0",redis.clients.jedis.c
+ ommands;uses:="redis.clients.jedis,redis.clients.jedis.args,redis.cli
+ ents.jedis.exceptions,redis.clients.jedis.params,redis.clients.jedis.
+ resps,redis.clients.jedis.util";version="3.7.0",redis.clients.jedis.r
+ esps;uses:="redis.clients.jedis";version="3.7.0",redis.clients.jedis.
+ args;version="3.7.0",redis.clients.jedis.params;uses:="redis.clients.
+ jedis,redis.clients.jedis.args";version="3.7.0"
+Bundle-Name: Jedis
+Bundle-Version: 3.7.0
+Created-By: Apache Maven Bundle Plugin
+Build-Jdk: 1.8.0_292
+
